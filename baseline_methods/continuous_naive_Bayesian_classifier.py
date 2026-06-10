@@ -66,33 +66,24 @@ def file_to_continuous_Bayesian_classifier(file_name):
 
     return classifier
 
-def file_csv_to_df(train, file_id, user_id = 0, g_to_ms2 = 9.81):
-    if (train):
-        assert 1 <= file_id and file_id <= TRAIN_FILE_NUMBERS
-        assert 0 <= user_id and user_id <= TRAIN_USER_NUMBERS
+def file_csv_to_df(train, file_id, user_id=None, g_to_ms2=9.81):
+    if train:
+        assert 1 <= file_id <= TRAIN_FILE_NUMBERS
         folder = "train"
     else:
-        assert TRAIN_FILE_NUMBERS + 1 <= file_id and file_id <= TRAIN_FILE_NUMBERS + TEST_FILE_NUMBERS
-        assert TRAIN_USER_NUMBERS <= user_id and user_id <= TRAIN_USER_NUMBERS + TEST_USER_NUMBERS
+        assert TRAIN_FILE_NUMBERS + 1 <= file_id <= TRAIN_FILE_NUMBERS + TEST_FILE_NUMBERS
         folder = "test"
     
-    if ((train and user_id != 0) or (not train and user_id != 60)):
+    if user_id is not None:
+        assert 1 <= user_id <= TRAIN_USER_NUMBERS + TEST_USER_NUMBERS
         df = pd.read_csv(f'data/{folder}/User_{user_id:03d}/{file_id:05d}.csv')
-        df['mean_x'] *= g_to_ms2
-        df['mean_y'] *= g_to_ms2
-        df['mean_z'] *= g_to_ms2
-        df['std_x'] *= g_to_ms2
-        df['std_y'] *= g_to_ms2
-        df['std_z'] *= g_to_ms2
-        return df
-    
-    pattern = f"data/{folder}/User_*/{file_id:05d}.csv"
-    matches = glob.glob(pattern)
+    else:
+        pattern = f"data/{folder}/User_*/{file_id:05d}.csv"
+        matches = glob.glob(pattern)
+        if len(matches) == 0:
+            raise FileNotFoundError(f"No file found for file_id={file_id}")
+        df = pd.read_csv(matches[0])
 
-    if len(matches) == 0:
-        raise FileNotFoundError(f"No file found for file_id={file_id}")
-
-    df = pd.read_csv(matches[0])
     df['mean_x'] *= g_to_ms2
     df['mean_y'] *= g_to_ms2
     df['mean_z'] *= g_to_ms2
